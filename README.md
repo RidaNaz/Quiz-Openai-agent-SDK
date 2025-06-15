@@ -19,9 +19,9 @@
 
 ### Prerequisites
 
-1. Foundational Python Programming (OOPs, @dataclass, generics)
-2. Async Programming (async, time.sleep(), asyncio.sleep())
-3. LLMs (Prompt Engineering, Check Errors by providing wrong Model name or API)
+1. Foundational Python Programming **(OOPs, @dataclass, generics)**
+2. Async Programming **(async, time.sleep(), asyncio.sleep())**
+3. LLMs **(Prompt Engineering, Check Errors by providing wrong Model name or API)**
 
 ### SDK Documentation
 
