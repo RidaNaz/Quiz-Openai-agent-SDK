@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-dotenv
+openai-agents
+
+pytz
+gspread
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+
+
+email-validator
