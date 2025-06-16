@@ -1,17 +1,17 @@
 import asyncio
 import uuid
-import os
 from typing import List
-from agents import Runner, trace
-from agents.runner import (
+from agents import (
     TResponseInputItem,
     MessageOutputItem,
     HandoffOutputItem,
     ToolCallItem,
-    ToolCallOutputItem
+    ToolCallOutputItem,
+    ItemHelpers,
+    Runner,
+    trace
 )
-from agents.helpers import ItemHelpers
-from .agents.triage_agent import router_agent
+from triage_agent import triage_agent
 from context import DentalAgentContext
 from .model_config import get_gemini_config
 
@@ -21,7 +21,7 @@ async def run_conversation():
     # Initialize context and agent
     context = DentalAgentContext()
 
-    current_agent = router_agent
+    current_agent = triage_agent
     conversation_id = uuid.uuid4().hex[:16]
     input_history: List[TResponseInputItem] = []
 

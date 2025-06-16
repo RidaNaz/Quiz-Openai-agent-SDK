@@ -1,9 +1,9 @@
 from agents import Agent, handoff
 from agents.extensions import handoff_filters
-from .verification_agent import verification_agent
-from .appointment_agent import appointment_agent
-from .symptoms_agent import symptom_agent
-from ..model_config import get_gemini_config
+from .clinic_agents.verification_agent import verification_agent
+from .clinic_agents.appointment_agent import appointment_agent
+from .clinic_agents.symptoms_agent import symptom_agent
+from .model_config import get_gemini_config
 
 def log_verification(patient_id: str):
     print(f"Verified patient {patient_id}")
@@ -20,7 +20,7 @@ secured_symptom_handoff = handoff(
     input_filter=handoff_filters.require_verified_context
 )
 
-router_agent = Agent(
+triage_agent = Agent(
     name="Main Router",
     instructions="""Analyze the user's request and route appropriately:
     1. For identity verification → verification_agent
