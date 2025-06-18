@@ -1,4 +1,7 @@
+import os
 import smtplib
+from pydantic import BaseModel
+from agents import function_tool
 from email.message import EmailMessage
 
 class EmailInput(BaseModel):

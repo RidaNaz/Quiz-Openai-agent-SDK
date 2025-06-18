@@ -1,9 +1,25 @@
-from agents import Agent, handoff
+import os
+from dotenv import load_dotenv
 from agents.extensions import handoff_filters
-from .clinic_agents.verification_agent import verification_agent
-from .clinic_agents.appointment_agent import appointment_agent
 from .clinic_agents.symptoms_agent import symptom_agent
-from .model_config import get_gemini_config
+from .clinic_agents.appointment_agent import appointment_agent
+from .clinic_agents.verification_agent import verification_agent
+from agents import Agent, handoff, AsyncOpenAI, OpenAIChatCompletionsModel
+
+load_dotenv()
+
+MODEL_NAME = "gemini-2.0-flash"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+external_client = AsyncOpenAI(
+    api_key=GEMINI_API_KEY,
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
+
+model = OpenAIChatCompletionsModel(
+    model=MODEL_NAME,
+    openai_client=external_client
+)
 
 def log_verification(patient_id: str):
     print(f"Verified patient {patient_id}")
@@ -28,9 +44,5 @@ triage_agent = Agent(
     3. For symptoms → symptom_agent (after verification)
     Never proceed without verification when required!""",
     handoffs=[verification_agent, secured_appointment_handoff, secured_symptom_handoff],
-    model=get_gemini_config().model.model_name,  # "gemini-2.0-flash"
-    model_settings={
-        "temperature": 0.3,
-        "max_tokens": 150
-    }
+    model=model
 )

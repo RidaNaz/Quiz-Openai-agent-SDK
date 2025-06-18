@@ -1,3 +1,8 @@
+import datetime
+from typing import Optional
+from pydantic import BaseModel
+from agents import function_tool
+
 class SymptomData(BaseModel):
     patient_id: str
     symptom_type: str

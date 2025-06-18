@@ -1,8 +1,8 @@
-from typing import Optional, List
-from pydantic import BaseModel
-from agents import function_tool
 import gspread
 import datetime
+from pydantic import BaseModel
+from agents import function_tool
+from typing import Optional, List
 from oauth2client.service_account import ServiceAccountCredentials
 
 # Initialize Google Sheets

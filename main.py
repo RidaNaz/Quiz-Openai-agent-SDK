@@ -1,6 +1,6 @@
-import asyncio
+import os
 import uuid
-from typing import List
+import asyncio
 from agents import (
     TResponseInputItem,
     MessageOutputItem,
@@ -9,14 +9,38 @@ from agents import (
     ToolCallOutputItem,
     ItemHelpers,
     Runner,
-    trace
+    trace,
+    AsyncOpenAI,
+    OpenAIChatCompletionsModel,
+    RunConfig
 )
+from typing import List
+from dotenv import load_dotenv
 from triage_agent import triage_agent
 from context import DentalAgentContext
-from .model_config import get_gemini_config
+
+load_dotenv()
+
+MODEL_NAME = "gemini-2.0-flash"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+external_client = AsyncOpenAI(
+    api_key=GEMINI_API_KEY,
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
+
+model = OpenAIChatCompletionsModel(
+    model=MODEL_NAME,
+    openai_client=external_client
+)
+
+config = RunConfig(
+    model=model,
+    model_provider=external_client,
+    tracing_disabled=True
+)
 
 async def run_conversation():
-    config = get_gemini_config()
 
     # Initialize context and agent
     context = DentalAgentContext()

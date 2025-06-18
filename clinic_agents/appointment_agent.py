@@ -1,4 +1,5 @@
-from agents import Agent
+import os
+from dotenv import load_dotenv
 from tools.appointments import (
     get_appointments_tool,
     create_appointment_tool,
@@ -7,7 +8,22 @@ from tools.appointments import (
 )
 from tools.send_email import send_email_tool
 from .verification_agent import verification_agent
-from ..model_config import get_gemini_config
+from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel
+
+load_dotenv()
+
+MODEL_NAME = "gemini-2.0-flash"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+external_client = AsyncOpenAI(
+    api_key=GEMINI_API_KEY,
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
+
+model = OpenAIChatCompletionsModel(
+    model=MODEL_NAME,
+    openai_client=external_client
+)
 
 appointment_agent = Agent(
     name="Appointment Agent",
@@ -25,9 +41,5 @@ appointment_agent = Agent(
         send_email_tool
     ],
     handoffs=[verification_agent],
-    model=get_gemini_config().model.model_name,  # "gemini-2.0-flash"
-    model_settings={
-        "temperature": 0.3,
-        "max_tokens": 150
-    }
+    model=model
 )

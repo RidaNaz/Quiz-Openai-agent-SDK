@@ -1,7 +1,23 @@
-from agents import Agent
+import os
+from dotenv import load_dotenv
 from tools.logs_entry import log_symptoms_tool
 from .verification_agent import verification_agent
-from ..model_config import get_gemini_config
+from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel
+
+load_dotenv()
+
+MODEL_NAME = "gemini-2.0-flash"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+external_client = AsyncOpenAI(
+    api_key=GEMINI_API_KEY,
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
+
+model = OpenAIChatCompletionsModel(
+    model=MODEL_NAME,
+    openai_client=external_client
+)
 
 symptom_agent = Agent(
     name="Symptom Agent",
@@ -9,9 +25,5 @@ symptom_agent = Agent(
     Required verification before logging any symptoms.""",
     tools=[log_symptoms_tool],
     handoffs=[verification_agent],
-    model=get_gemini_config().model.model_name,  # "gemini-2.0-flash"
-    model_settings={
-        "temperature": 0.3,
-        "max_tokens": 150
-    }
+    model=model
 )

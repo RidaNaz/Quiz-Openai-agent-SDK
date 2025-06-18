@@ -1,7 +1,6 @@
-from typing import Optional
+import gspread
 from pydantic import BaseModel
 from agents import function_tool
-import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 # Google Sheets setup
