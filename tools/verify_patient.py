@@ -7,7 +7,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
-sheet = client.open("Patient Records").sheet1
+sheet = client.open("Openai Receptionist Agent").sheet1
 
 class PatientVerificationInput(BaseModel):
     name: str

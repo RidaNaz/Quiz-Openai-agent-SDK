@@ -5,9 +5,10 @@ openai-agents
 
 pytz
 gspread
-google-api-python-client
+oauth2client
 google-auth-httplib2
 google-auth-oauthlib
+google-api-python-client
 
 
 email-validator

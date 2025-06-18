@@ -16,8 +16,8 @@ from agents import (
 )
 from typing import List
 from dotenv import load_dotenv
-from triage_agent import triage_agent
 from context import DentalAgentContext
+from orchestrator_agent import triage_agent
 
 load_dotenv()
 
@@ -61,7 +61,7 @@ async def run_conversation():
             input_history.append({"content": user_input, "role": "user"})
             
             # Run the agent
-            result = await Runner.run(
+            result = await Runner.run_streamed(
                 agent=current_agent,
                 input_items=input_history,
                 context=context,
