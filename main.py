@@ -1,8 +1,7 @@
 import os
 import uuid
-import asyncio
+import chainlit as cl
 from agents import (
-    TResponseInputItem,
     MessageOutputItem,
     HandoffOutputItem,
     ToolCallItem,
@@ -14,7 +13,6 @@ from agents import (
     OpenAIChatCompletionsModel,
     RunConfig
 )
-from typing import List
 from dotenv import load_dotenv
 from context import DentalAgentContext
 from orchestrator_agent import triage_agent
@@ -24,6 +22,7 @@ load_dotenv()
 MODEL_NAME = "gemini-2.0-flash"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+# Initialize OpenAI client
 external_client = AsyncOpenAI(
     api_key=GEMINI_API_KEY,
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
@@ -40,49 +39,68 @@ config = RunConfig(
     tracing_disabled=True
 )
 
-async def run_conversation():
+@cl.on_chat_start
+async def start_chat():
+    # Initialize session-specific data
+    cl.user_session.set("context", DentalAgentContext())
+    cl.user_session.set("current_agent", triage_agent)
+    cl.user_session.set("input_history", [])
+    cl.user_session.set("conversation_id", uuid.uuid4().hex[:16])
 
-    # Initialize context and agent
-    context = DentalAgentContext()
+    # Send welcome message
+    await cl.Message(
+        content="🦷 Welcome to Dental Clinic Assistant! How can I help you today?",
+        author="Assistant"
+    ).send()
 
-    current_agent = triage_agent
-    conversation_id = uuid.uuid4().hex[:16]
-    input_history: List[TResponseInputItem] = []
+@cl.on_message
+async def handle_message(message: cl.Message):
+    # Get session data
+    context = cl.user_session.get("context")
+    current_agent = cl.user_session.get("current_agent")
+    input_history = cl.user_session.get("input_history")
+    conversation_id = cl.user_session.get("conversation_id")
 
-    print("Dental Clinic Assistant initialized. Type 'exit' to quit.\n")
+    # Add user message to history
+    input_history.append({"content": message.content, "role": "user"})
 
-    while True:
-        user_input = input("Patient: ")
-        if user_input.lower() == 'exit':
-            break
-
+    # Show typing indicator
+    async with cl.Step(name="Thinking", type="llm"):
         with trace("Dental Clinic", group_id=conversation_id):
-            # Add user message to history
-            input_history.append({"content": user_input, "role": "user"})
-            
             # Run the agent
-            result = await Runner.run_streamed(
-                agent=current_agent,
-                input_items=input_history,
+            result = Runner.run_streamed(
+                starting_agent=current_agent,
+                input=input_history,
                 context=context,
                 run_config=config
             )
 
-            # Process and display responses
+            # Process responses
             for item in result.new_items:
                 if isinstance(item, MessageOutputItem):
-                    print(f"Assistant: {ItemHelpers.text_message_output(item)}")
+                    await cl.Message(
+                        content=ItemHelpers.text_message_output(item),
+                        author="Assistant"
+                    ).send()
                 elif isinstance(item, HandoffOutputItem):
-                    print(f"-> Transferring to {item.target_agent.name}...")
+                    await cl.Message(
+                        content=f"→ Transferring to {item.target_agent.name}...",
+                        author="System"
+                    ).send()
                 elif isinstance(item, ToolCallItem):
-                    print(f"Action: {item.tool.name}")
+                    await cl.Message(
+                        content=f"⚙️ Action: {item.tool.name}",
+                        author="System"
+                    ).send()
                 elif isinstance(item, ToolCallOutputItem):
                     if item.tool.name == "verify_patient_tool":
                         context.verified = (item.output == "verified")
-            
-            # Update conversation state
-            input_history = result.to_input_list()
-            current_agent = result.last_agent
 
+        # Update session state
+        cl.user_session.set("input_history", result.to_input_list())
+        cl.user_session.set("current_agent", result.last_agent)
+
+# Start the Chainlit app
 if __name__ == "__main__":
-    asyncio.run(run_conversation())
+    from chainlit.cli import run_chainlit
+    run_chainlit("main.py")

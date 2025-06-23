@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel
-from ..tools.logs_entry import log_symptoms_tool
+from tools.logs_entry import log_symptoms_tool
 from .verification_agent import verification_agent
 
 load_dotenv()

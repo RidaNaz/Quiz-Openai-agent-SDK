@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from context import DentalAgentContext
-from ..tools.verify_patient import verify_patient_tool
+from tools.verify_patient import verify_patient_tool
 from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel
 
 load_dotenv()
