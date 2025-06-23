@@ -18,18 +18,19 @@ class AppointmentData(BaseModel):
     reason: Optional[str] = None
 
 @function_tool
-def create_appointment_tool(input: AppointmentData) -> str:
-    """Create new appointment in Google Sheets"""
-    sheet = client.open("Appointments").sheet1
-    sheet.append_row([
-        input.patient_id,
-        input.date,
-        input.time,
-        input.reason or "",
-        "Scheduled",
-        datetime.now().isoformat()
-    ])
-    return f"Appointment created for {input.date} at {input.time}"
+async def create_appointment_tool(patient_id: str, date: str, time: str, reason: str = "") -> str:
+    try:
+        sheet.append_row([
+            patient_id,
+            date,
+            time,
+            reason,
+            "Scheduled",
+            datetime.now().isoformat()])
+        return f"Appointment created for {date} at {time}"
+    
+    except Exception as e:
+        return f"Error creating appointment: {str(e)}"
 
 @function_tool
 def get_appointments_tool(patient_id: str) -> List[dict]:

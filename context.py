@@ -1,8 +1,11 @@
-from dataclasses import dataclass
-from typing import Optional
+from datetime import datetime
+from pydantic import BaseModel
+from typing import Optional, List
 
-@dataclass
-class DentalAgentContext:
-    verified: bool = False
+class DentalAgentContext(BaseModel):
     patient_id: Optional[str] = None
-    current_patient_name: Optional[str] = None
+    verified: bool = False
+    verification_time: Optional[datetime] = None
+    symptoms: List[str] = []
+    appointments: List[dict] = []
+    current_action: Optional[str] = None

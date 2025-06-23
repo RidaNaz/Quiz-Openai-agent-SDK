@@ -66,7 +66,7 @@ async def handle_message(message: cl.Message):
 
     # Show typing indicator
     async with cl.Step(name="Thinking", type="llm"):
-        with trace("Dental Clinic", group_id=conversation_id):
+        with trace("NazCare Receptionist", group_id=conversation_id):
             # Run the agent
             result = Runner.run_streamed(
                 starting_agent=current_agent,

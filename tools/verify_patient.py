@@ -11,17 +11,17 @@ sheet = client.open("Openai Receptionist Agent").sheet1
 
 class PatientVerificationInput(BaseModel):
     name: str
-    dob: str  # Format: "YYYY-MM-DD"
+    dob: str
 
 @function_tool
-def verify_patient_tool(input: PatientVerificationInput) -> str:
-    """Verify patient identity against Google Sheets records.
-    Returns 'verified' or 'not_found'"""
+async def verify_patient_tool(name: str, dob: str) -> str:
+    """Verify patient identity"""
     
     records = sheet.get_all_records()
+
     for row in records:
-        if (row["Name"].lower() == input.name.lower() and 
-            row["DOB"] == input.dob):
+        if (row["Name"].lower() == name.lower() and 
+            row["DOB"] == dob):
             return "verified"
-    
+        
     return "not_found"
