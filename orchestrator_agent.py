@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from typing import TypedDict, Optional
 from clinic_agents.symptoms_agent import symptom_agent
 from clinic_agents.appointment_agent import appointment_agent
 from clinic_agents.verification_agent import verification_agent
@@ -20,16 +21,24 @@ model = OpenAIChatCompletionsModel(
     openai_client=external_client
 )
 
-def log_verification(patient_id: str):
-    print(f"Verified patient {patient_id}")
+class AgentResponse(TypedDict):
+    message: str
+    next_agent: Optional[str]
+    requires_verification: bool
 
 triage_agent = Agent(
     name="Main Router",
-    instructions="""Analyze the user's request and route appropriately:
-    1. For identity verification → verification_agent
-    2. For appointments → appointment_agent (after verification)
-    3. For symptoms → symptom_agent (after verification)
-    Never proceed without verification when required!""",
+    instructions="""Respond to the user and route appropriately:
+    1. For greetings → Respond with: "Hello! Welcome to Dental Clinic Assistant. I can help with:
+       - Appointments
+       - Symptoms check
+       - Patient verification
+       How can I help you today?"
+    2. For identity verification → verification_agent
+    3. For appointments → appointment_agent (after verification)
+    4. For symptoms → symptom_agent (after verification)
+    Always respond to the user in a friendly, professional manner.""",
     handoffs=[verification_agent, symptom_agent, appointment_agent],
-    model=model
+    model=model,
+    output_type=AgentResponse
 )
