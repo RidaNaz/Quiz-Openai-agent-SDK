@@ -1,21 +1,10 @@
 import os
 import uuid
 import chainlit as cl
-from agents import (
-    MessageOutputItem,
-    HandoffOutputItem,
-    ToolCallItem,
-    ToolCallOutputItem,
-    ItemHelpers,
-    Runner,
-    trace,
-    AsyncOpenAI,
-    OpenAIChatCompletionsModel,
-    RunConfig
-)
 from dotenv import load_dotenv
 from context import DentalAgentContext
 from orchestrator_agent import triage_agent
+from agents import ItemHelpers, Runner, AsyncOpenAI, OpenAIChatCompletionsModel, RunConfig
 
 load_dotenv()
 
@@ -23,21 +12,9 @@ MODEL_NAME = "gemini-2.0-flash"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Initialize OpenAI client
-external_client = AsyncOpenAI(
-    api_key=GEMINI_API_KEY,
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-)
-
-model = OpenAIChatCompletionsModel(
-    model=MODEL_NAME,
-    openai_client=external_client
-)
-
-config = RunConfig(
-    model=model,
-    model_provider=external_client,
-    tracing_disabled=True
-)
+external_client = AsyncOpenAI(api_key=GEMINI_API_KEY, base_url="https://generativelanguage.googleapis.com/v1beta/openai/")
+model = OpenAIChatCompletionsModel(model=MODEL_NAME, openai_client=external_client)
+config = RunConfig(model=model, model_provider=external_client, tracing_disabled=True)
 
 @cl.on_chat_start
 async def start_chat():
@@ -48,10 +25,7 @@ async def start_chat():
     cl.user_session.set("conversation_id", uuid.uuid4().hex[:16])
 
     # Send welcome message
-    await cl.Message(
-        content="🦷 Welcome to Dental Clinic Assistant! How can I help you today?",
-        author="Assistant"
-    ).send()
+    await cl.Message(content="🦷 Welcome to Dental Clinic Assistant! How can I help you today?", author="Assistant").send()
 
 @cl.on_message
 async def handle_message(message: cl.Message):
@@ -64,41 +38,41 @@ async def handle_message(message: cl.Message):
     # Add user message to history
     input_history.append({"content": message.content, "role": "user"})
 
-    # Show typing indicator
-    async with cl.Step(name="Thinking", type="llm"):
-        with trace("NazCare Receptionist", group_id=conversation_id):
-            # Run the agent
-            result = Runner.run_streamed(
-                starting_agent=current_agent,
-                input=input_history,
-                context=context,
-                run_config=config
-            )
+    # Simple runner call without await
+    result = Runner.run_streamed(
+        starting_agent=current_agent,
+        input=input_history,
+        context=context,
+        run_config=config
+        )
 
-            # Process responses
-            for item in result.new_items:
-                if isinstance(item, MessageOutputItem):
-                    await cl.Message(
-                        content=ItemHelpers.text_message_output(item),
-                        author="Assistant"
-                    ).send()
-                elif isinstance(item, HandoffOutputItem):
-                    await cl.Message(
-                        content=f"→ Transferring to {item.target_agent.name}...",
-                        author="System"
-                    ).send()
-                elif isinstance(item, ToolCallItem):
-                    await cl.Message(
-                        content=f"⚙️ Action: {item.tool.name}",
-                        author="System"
-                    ).send()
-                elif isinstance(item, ToolCallOutputItem):
-                    if item.tool.name == "verify_patient_tool":
-                        context.verified = (item.output == "verified")
+    # Show streaming events in Chainlit UI
+    await cl.Message(content="🔄 Starting agent processing...", author="System").send()
 
-        # Update session state
-        cl.user_session.set("input_history", result.to_input_list())
-        cl.user_session.set("current_agent", result.last_agent)
+    async for event in result.stream_events():
+        # We'll ignore the raw responses event deltas
+        if event.type == "raw_response_event":
+            continue
+        # When the agent updates, show in UI
+        elif event.type == "agent_updated_stream_event":
+            await cl.Message(content=f"🔄 Agent updated: {event.new_agent.name}", author="System").send()
+            continue
+        # When items are generated, show them in UI
+        elif event.type == "run_item_stream_event":
+            if event.item.type == "tool_call_item":
+                await cl.Message(content=f"⚙ Tool called: {event.item.tool.name}", author="System").send()
+            elif event.item.type == "tool_call_output_item":
+                await cl.Message(content=f"📤 Tool output: {event.item.output}", author="System").send()
+            elif event.item.type == "message_output_item":
+                await cl.Message(content=f"💬 Agent response: {ItemHelpers.text_message_output(event.item)}", author="Assistant").send()
+            else:
+                pass  # Ignore other event types
+
+    await cl.Message(content="✅ Processing complete!", author="System").send()
+
+    # Update session state
+    cl.user_session.set("input_history", result.to_input_list())
+    cl.user_session.set("current_agent", result.last_agent)
 
 # Start the Chainlit app
 if __name__ == "__main__":
