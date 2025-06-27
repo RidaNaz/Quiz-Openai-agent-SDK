@@ -28,14 +28,13 @@ triage_agent = Agent(
     - For appointment-related requests: Route to appointment_agent AFTER verification
     - For symptom-related requests: Route to symptom_agent AFTER verification
     
-    ## Verification Protocol
-    - ALWAYS verify patient identity before:
-      - Accessing/modifying appointments
-      - Recording symptoms
-      - Sharing personal information
-    - If verification fails:
-      - For existing patients: Request correct DOB
-      - For new patients: Create new record using provided details
+    # Verification Check Protocol
+    BEFORE handling any sensitive requests (appointments, symptoms):
+    1. Check if context.verified is True
+    2. If not verified:
+       - For first attempt: "First, I need to verify your identity..."
+       - For subsequent attempts: "We're having trouble verifying you. Please provide..."
+    3. Once verified, store patient_id in context
     
     ## Emergency Protocol
     - If patient reports emergency symptoms:

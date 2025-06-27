@@ -23,7 +23,7 @@ async def start_chat():
 @cl.on_message
 async def handle_message(message: cl.Message):
     # Get session data
-    context = cl.user_session.get("context")
+    context = cl.user_session.get("context") or DentalAgentContext()
     current_agent = cl.user_session.get("current_agent")
     input_history = cl.user_session.get("input_history")
     conversation_id = cl.user_session.get("conversation_id")
@@ -43,17 +43,16 @@ async def handle_message(message: cl.Message):
     await cl.Message(content="🔄 Starting agent processing...", author="System").send()
 
     async for event in result.stream_events():
-        # We'll ignore the raw responses event deltas
         if event.type == "raw_response_event":
             continue
-        # When the agent updates, show in UI
         elif event.type == "agent_updated_stream_event":
             await cl.Message(content=f"🔄 Agent updated: {event.new_agent.name}", author="System").send()
             continue
-        # When items are generated, show them in UI
         elif event.type == "run_item_stream_event":
             if event.item.type == "tool_call_item":
-                await cl.Message(content=f"⚙ Tool called: {event.item.tool.name}", author="System").send()
+                # Updated tool call handling
+                tool_name = getattr(event.item, 'function_name', 'Unknown Tool')
+                await cl.Message(content=f"⚙ Tool called: {tool_name}", author="System").send()
             elif event.item.type == "tool_call_output_item":
                 await cl.Message(content=f"📤 Tool output: {event.item.output}", author="System").send()
             elif event.item.type == "message_output_item":
