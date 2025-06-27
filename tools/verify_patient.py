@@ -1,4 +1,3 @@
-from datetime import datetime
 from pydantic import BaseModel
 from agents import function_tool, RunContextWrapper
 from sheet_utils import get_sheet, normalize_date, find_column_index, append_row
@@ -49,7 +48,6 @@ async def verify_patient_tool(ctx: RunContextWrapper[DentalAgentContext], name: 
                 "DOB": normalized_dob,
                 "Verified": "TRUE",
                 "Pat Num": new_patient_id,
-                "Timestamp": datetime.now().isoformat()
             }
             
             append_row(sheet, new_data)
@@ -59,14 +57,14 @@ async def verify_patient_tool(ctx: RunContextWrapper[DentalAgentContext], name: 
         
         # Update context if verification succeeded
         if status in ["verified", "created"]:
-            ctx.context.patient_id = patient_id
             ctx.context.verified = True
-            ctx.context.verification_time = datetime.now()
+            ctx.context.patient_id = patient_id
         
         return {
             "status": status,
             "patient_id": patient_id,
-            "message": message
+            "message": message,
+            "context": ctx.context
         }
         
     except Exception as e:
