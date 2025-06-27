@@ -1,24 +1,10 @@
-import os
-from dotenv import load_dotenv
+from agents import Agent
+from config import gemini_config
 from clinic_agents.symptoms_agent import symptom_agent
 from clinic_agents.appointment_agent import appointment_agent
 from clinic_agents.verification_agent import verification_agent
-from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel
 
-load_dotenv()
-
-MODEL_NAME = "gemini-2.0-flash"
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-external_client = AsyncOpenAI(
-    api_key=GEMINI_API_KEY,
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-)
-
-model = OpenAIChatCompletionsModel(
-    model=MODEL_NAME,
-    openai_client=external_client
-)
+model = gemini_config.model
 
 def log_verification(patient_id: str):
     print(f"Verified patient {patient_id}")
