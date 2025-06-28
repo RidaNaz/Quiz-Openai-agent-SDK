@@ -1,4 +1,4 @@
-from agents import Agent
+from agents import Agent, ModelSettings
 from config import gemini_config
 from tools.appointments import (
     get_appointments_tool,
@@ -7,7 +7,6 @@ from tools.appointments import (
     cancel_appointment_tool
 )
 from tools.send_email import send_email_tool
-from .verification_agent import verification_agent
 
 model = gemini_config.model
 
@@ -58,6 +57,7 @@ appointment_agent = Agent(
        cancel_appointment_tool,
        send_email_tool
    ],
-   handoffs=[verification_agent],
-   model=model
+   model=model,
+   handoff_description="To deal with Appointment booking or related queries/tasks",
+   model_settings=ModelSettings(tool_choice="required"),
 )

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from agents import function_tool, RunContextWrapper
-from sheet_utils import get_sheet, normalize_date, find_column_index, append_row
+from sheet_utils import get_sheet, normalize_date, append_row
 from context import DentalAgentContext
 
 class PatientVerificationInput(BaseModel):
