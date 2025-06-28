@@ -47,9 +47,6 @@ async def handle_message(message: cl.Message):
             context=context,
             run_config=config
         )
-
-        # Track verification updates
-        last_tool_called = None
         
         # Process streaming events
         async for event in result.stream_events():
@@ -58,35 +55,33 @@ async def handle_message(message: cl.Message):
                 
             elif event.type == "agent_updated_stream_event":
                 await cl.Message(
-                    content=f"⚡ Agent changed to: {event.new_agent.name}",
+                    content=f"⚡ Agent: {event.new_agent.name}",
                     author="System"
                 ).send()
                 
             elif event.type == "run_item_stream_event":
                 if event.item.type == "tool_call_item":
-                    last_tool_called = getattr(event.item, 'function_name', None)
-                    await cl.Message(
-                        content=f"⚙ Executing: {last_tool_called}",
-                        author="System"
-                    ).send()
+                    print("-- Tool was called")
                     
                 elif event.item.type == "tool_call_output_item":
-                    # Update context only for successful verification
-                    if last_tool_called == "verify_patient_tool":
-                        if event.item.output.get("status") in ["verified", "created"]:
-                            context.verified = True
-                            context.patient_id = event.item.output.get("patient_id")
+                    print(f"-- Tool output: {event.item.output}")
                 
                 elif event.item.type == "message_output_item":
                     await cl.Message(
                         content=ItemHelpers.text_message_output(event.item),
                         author="Assistant"
                     ).send()
-
+                else:
+                    pass  # Ignore other event types
+        
+        print("=== Run complete ===")
+        
         # Update session state
         cl.user_session.set("input_history", result.to_input_list())
+        print("input_history:", result.to_input_list())
         cl.user_session.set("current_agent", result.last_agent)
         cl.user_session.set("context", context)  # Persist updated context
+        print ("context:", context)
 
     except Exception as e:
         # Handle errors gracefully

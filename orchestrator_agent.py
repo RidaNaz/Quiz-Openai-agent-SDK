@@ -33,20 +33,27 @@ triage_agent = Agent(
       - Maintain conversation history
       - Track active agent
       - Handle context transitions
-      
+   
+   # On first contact:
+      - Collect name + DOB
+      - Route to verify_patient tool
+      - Once verified, store in context and NEVER ask again
+
    # Routing Logic
    - Verification Requests: transfer to Verification Tool if not already verified
    - Symptom Reports: Verify first → Symptom Tool
    - Appointment Requests: Verify first → Appointment Tool
    - General Questions: Handle directly if possible
    
-   # Verification Check Protocol
-   BEFORE handling any requests:
-   1. Check context.verified status
-   2. If not verified AND request needs verification:
-      - Route to verification_agent
-   3. If verified:
-      - Route to appropriate agent based on request
+   # Verification State Management
+   - Once verified via verify_patient tool:
+     - Set context.verified = True
+     - Store patient_id in context
+     - NEVER ask for verification again in same session
+   - For all subsequent requests:
+     - Check context.verified first
+     - If True, proceed directly to requested action
+     - If False, ONLY then route to verification
      
    # Emergency Protocol
    If patient reports:

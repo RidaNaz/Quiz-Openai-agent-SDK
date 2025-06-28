@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from agents import function_tool, RunContextWrapper
-from sheet_utils import get_sheet, normalize_date, append_row
+from sheet_utils import get_sheet, normalize_date, append_row, find_patient_row
 from context import DentalAgentContext
 
 class PatientVerificationInput(BaseModel):
@@ -18,30 +18,53 @@ async def verify_patient_tool(ctx: RunContextWrapper[DentalAgentContext], name: 
         
     Returns:
         dict: {
-            "status": "verified" | "created" | "failed",
+            "status": "verified" | "not_verified" | "patient_created" | "failed",
             "patient_id": str,
-            "message": str
+            "message": str,
+            "success": bool
         }
     """
     sheet = get_sheet()
     normalized_dob = normalize_date(dob)
-    status = ""
-    patient_id = ""
     
     try:
         records = sheet.get_all_records()
         
-        # Check for existing patient
+        # Check if patient exists by name
+        matching_patients = []
         for row in records:
-            if (row["Name"].lower() == name.lower() and 
-                normalize_date(row["DOB"]) == normalized_dob):
-                status = "verified"
-                patient_id = str(row["Pat Num"])
-                message = "Patient verified successfully"
-                break
+            if row["Name"].lower() == name.lower():
+                matching_patients.append(row)
         
-        # Create new patient if not found
-        if not status:
+        # Handle verification cases
+        if matching_patients:
+            # Check if any matching patient has matching DOB
+            verified_patient = None
+            for patient in matching_patients:
+                if normalize_date(patient["DOB"]) == normalized_dob:
+                    verified_patient = patient
+                    break
+            
+            if verified_patient:
+                # Update context
+                ctx.context.verified = True
+                ctx.context.patient_id = str(verified_patient["Pat Num"])
+                return {
+                    "status": "verified",
+                    "patient_id": str(verified_patient["Pat Num"]),
+                    "message": f"Welcome back {name}! You're successfully verified.",
+                    "success": True
+                }
+            else:
+                ctx.context.verified = False
+                return {
+                    "status": "not_verified",
+                    "patient_id": "",
+                    "message": "The date of birth doesn't match our records. Please verify your details.",
+                    "success": False
+                }
+        else:
+            # Create new patient
             new_patient_id = f"PAT-{len(records) + 1000}"
             new_data = {
                 "Name": name,
@@ -51,25 +74,21 @@ async def verify_patient_tool(ctx: RunContextWrapper[DentalAgentContext], name: 
             }
             
             append_row(sheet, new_data)
-            status = "created"
-            patient_id = new_patient_id
-            message = "New patient record created"
-        
-        # Update context if verification succeeded
-        if status in ["verified", "created"]:
+            
+            # Update context
             ctx.context.verified = True
-            ctx.context.patient_id = patient_id
-        
-        return {
-            "status": status,
-            "patient_id": patient_id,
-            "message": message,
-            "context": ctx.context
-        }
+            ctx.context.patient_id = new_patient_id
+            return {
+                "status": "patient_created",
+                "patient_id": new_patient_id,
+                "message": f"New patient record created. Your patient ID is {new_patient_id}.",
+                "success": True
+            }
         
     except Exception as e:
         return {
             "status": "failed",
             "patient_id": "",
-            "message": f"Error: {str(e)}"
+            "message": "We're experiencing technical difficulties. Please try again later.",
+            "success": False
         }
