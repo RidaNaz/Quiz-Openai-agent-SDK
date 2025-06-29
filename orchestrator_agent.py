@@ -8,13 +8,13 @@ from clinic_agents.verification_agent import verification_agent
 
 model = gemini_config.model
     
-def on_handoff(agent: Agent, ctx: RunContextWrapper[None]):
+def on_handoff(agent: Agent, ctx: RunContextWrapper[DentalAgentContext]):
    agent_name = agent.name
-   # ctx = ctx
+   ctx = ctx
    print("--------------------------------")
    print(f"Handing off to {agent_name}...")
    print("--------------------------------")
-   # print(f"Handing off to {agent.name} with patient {ctx.context.patient_id}")
+   print(f"Handing off to {agent.name} with patient {ctx.context.patient_id}")
 
 triage_agent = Agent(
    name="Main Router",
@@ -76,9 +76,21 @@ triage_agent = Agent(
    - Acknowledge completed actions
    """,
    handoffs=[
-      handoff(verification_agent, on_handoff=lambda ctx: on_handoff(verification_agent, ctx)),
-      handoff(appointment_agent, on_handoff=lambda ctx: on_handoff(appointment_agent, ctx)),
-      handoff(symptom_agent, on_handoff=lambda ctx: on_handoff(symptom_agent, ctx))
+      handoff(
+         verification_agent,
+         on_handoff=lambda ctx: on_handoff(verification_agent, ctx),
+         input_filter=handoff_filters.remove_all_tools
+         ),
+      handoff(
+         appointment_agent,
+         on_handoff=lambda ctx: on_handoff(appointment_agent, ctx),
+         input_filter=handoff_filters.remove_all_tools
+         ),
+      handoff(
+         symptom_agent,
+         on_handoff=lambda ctx: on_handoff(symptom_agent, ctx),
+         input_filter=handoff_filters.remove_all_tools
+         )
       ],
    model=model,
    model_settings=ModelSettings(tool_choice="auto", temperature=0)

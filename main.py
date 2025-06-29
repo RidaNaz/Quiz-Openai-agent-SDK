@@ -37,6 +37,9 @@ async def handle_message(message: cl.Message):
     conversation_id = cl.user_session.get("conversation_id", "unknown")
     
     #  # Create a new message object for streaming
+    c_agent = cl.Message(content="")
+    await c_agent.send()
+    
     msg = cl.Message(content="")
     await msg.send()
 
@@ -54,13 +57,15 @@ async def handle_message(message: cl.Message):
         
         # Process streaming events
         async for event in result.stream_events():
+            
+            if event.type == "agent_updated_stream_event":
+                c_agent.content = f"⚡ Current Agent: {event.new_agent.name}"
+                await c_agent.update()
+                
             # Stream the response token by token
             if event.type == "raw_response_event" and hasattr(event.data, 'delta'):
                 token = event.data.delta
                 await msg.stream_token(token)
-                
-            elif event.type == "agent_updated_stream_event":
-                continue 
             
             elif event.type == "run_item_stream_event":
                 if event.item.type == "tool_call_item":
