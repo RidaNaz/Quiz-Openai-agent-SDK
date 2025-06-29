@@ -50,5 +50,5 @@ verification_agent = Agent[DentalAgentContext](
    tools=[verify_patient_tool],
    model=model,
    model_settings=ModelSettings(tool_choice="required", temperature=0),
-   handoff_description="To verify the patient with Name & DOB",
+   handoff_description="To verify the patient with Name & DOB"
 )

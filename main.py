@@ -35,6 +35,10 @@ async def handle_message(message: cl.Message):
     current_agent = cl.user_session.get("current_agent", triage_agent)
     input_history = cl.user_session.get("input_history", [])
     conversation_id = cl.user_session.get("conversation_id", "unknown")
+    
+    #  # Create a new message object for streaming
+    msg = cl.Message(content="")
+    await msg.send()
 
     try:
         # Add new user message to history
@@ -50,15 +54,14 @@ async def handle_message(message: cl.Message):
         
         # Process streaming events
         async for event in result.stream_events():
-            if event.type == "raw_response_event":
-                continue
+            # Stream the response token by token
+            if event.type == "raw_response_event" and hasattr(event.data, 'delta'):
+                token = event.data.delta
+                msg.stream_token(token)
                 
             elif event.type == "agent_updated_stream_event":
-                await cl.Message(
-                    content=f"⚡ Agent: {event.new_agent.name}",
-                    author="System"
-                ).send()
-                
+                continue 
+            
             elif event.type == "run_item_stream_event":
                 if event.item.type == "tool_call_item":
                     print("-- Tool was called")
@@ -67,10 +70,12 @@ async def handle_message(message: cl.Message):
                     print(f"-- Tool output: {event.item.output}")
                 
                 elif event.item.type == "message_output_item":
-                    await cl.Message(
-                        content=ItemHelpers.text_message_output(event.item),
-                        author="Assistant"
-                    ).send()
+                #    await cl.Message(
+                #         content=ItemHelpers.text_message_output(event.item),
+                #         author="Assistant"
+                #     ).send()
+                    msg.content = ItemHelpers.text_message_output(event.item)
+                    await msg.update()
                 else:
                     pass  # Ignore other event types
         
@@ -79,7 +84,6 @@ async def handle_message(message: cl.Message):
         # Update session state
         cl.user_session.set("input_history", result.to_input_list())
         print("input_history:", result.to_input_list())
-        cl.user_session.set("current_agent", result.last_agent)
         cl.user_session.set("context", context)  # Persist updated context
         print ("context:", context)
 
