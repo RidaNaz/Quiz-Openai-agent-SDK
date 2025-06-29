@@ -57,7 +57,7 @@ async def handle_message(message: cl.Message):
             # Stream the response token by token
             if event.type == "raw_response_event" and hasattr(event.data, 'delta'):
                 token = event.data.delta
-                msg.stream_token(token)
+                await msg.stream_token(token)
                 
             elif event.type == "agent_updated_stream_event":
                 continue 

@@ -1,19 +1,21 @@
 from agents import Agent, ModelSettings
 from config import gemini_config
+from context import DentalAgentContext
 from tools.logs_entry import log_symptoms_tool
 
 model = gemini_config.model
 
-symptom_agent = Agent(
+symptom_agent = Agent[DentalAgentContext](
    name="Symptom Agent",
    instructions="""
    # Role and Objective
    Specialized agent for recording patient symptoms and providing non-medical guidance.
    STRICTLY requires verified patient context before operation.
 
-   # Authorization Protocol
-   - MUST check context.verified == True before proceeding
-   - If not verified: "Please verify your identity first with our verification agent."
+   # Verification Handling
+   - You will ONLY receive requests from the main router AFTER verification is complete
+   - NEVER ask for verification - assume patient is already verified
+   - If context.verified is False (shouldn't happen), respond: "Please return to the main menu"
 
    # Symptom Recording Process
    1. Collect symptom details:

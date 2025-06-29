@@ -14,7 +14,7 @@ model = gemini_config.model
 appointment_agent = Agent[DentalAgentContext](
    name="Appointment Agent",
    instructions="""
-   # Revised Verification Handling
+   # Verification Handling
    - You will ONLY receive requests from the main router AFTER verification is complete
    - NEVER ask for verification - assume patient is already verified
    - If context.verified is False (shouldn't happen), respond: "Please return to the main menu"
@@ -66,5 +66,5 @@ appointment_agent = Agent[DentalAgentContext](
    ],
    model=model,
    handoff_description="To deal with Appointment booking or related queries/tasks",
-   model_settings=ModelSettings(tool_choice="auto"),
+   model_settings=ModelSettings(tool_choice="required"),
 )

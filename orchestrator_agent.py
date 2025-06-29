@@ -1,13 +1,20 @@
 from config import gemini_config
-from agents import Agent, ModelSettings
+from context import DentalAgentContext
+from agents.extensions import handoff_filters
+from agents import Agent, ModelSettings, handoff, RunContextWrapper
 from clinic_agents.symptoms_agent import symptom_agent
 from clinic_agents.appointment_agent import appointment_agent
 from clinic_agents.verification_agent import verification_agent
 
 model = gemini_config.model
-
-def log_verification(patient_id: str):
-    print(f"Verified patient {patient_id}")
+    
+def on_handoff(agent: Agent, ctx: RunContextWrapper[None]):
+   agent_name = agent.name
+   # ctx = ctx
+   print("--------------------------------")
+   print(f"Handing off to {agent_name}...")
+   print("--------------------------------")
+   # print(f"Handing off to {agent.name} with patient {ctx.context.patient_id}")
 
 triage_agent = Agent(
    name="Main Router",
@@ -68,20 +75,11 @@ triage_agent = Agent(
    - Confirm understanding before proceeding
    - Acknowledge completed actions
    """,
-   tools=[
-         verification_agent.as_tool(
-             tool_name="verify_patient",
-             tool_description="It verifies patient with Name & DOB to before dealing with appointments and any medical condition",
-         ),
-         symptom_agent.as_tool(
-             tool_name="symptoms_logs",
-             tool_description="It provides advice realted to any medical condition and record in sheet",
-         ),
-         appointment_agent.as_tool(
-             tool_name="appointment_tool",
-             tool_description="It provides your appointment details, books and update your appointment",
-         ),
-   ],
+   handoffs=[
+      handoff(verification_agent, on_handoff=lambda ctx: on_handoff(verification_agent, ctx)),
+      handoff(appointment_agent, on_handoff=lambda ctx: on_handoff(appointment_agent, ctx)),
+      handoff(symptom_agent, on_handoff=lambda ctx: on_handoff(symptom_agent, ctx))
+      ],
    model=model,
    model_settings=ModelSettings(tool_choice="auto", temperature=0)
 )

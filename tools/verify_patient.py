@@ -86,9 +86,10 @@ async def verify_patient_tool(ctx: RunContextWrapper[DentalAgentContext], name: 
             }
         
     except Exception as e:
+        print(f"Tool error: {str(e)}")  # Log actual error
         return {
             "status": "failed",
             "patient_id": "",
-            "message": "We're experiencing technical difficulties. Please try again later.",
+            "message": f"Verification service error: {str(e)}",
             "success": False
         }
