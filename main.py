@@ -1,13 +1,17 @@
 import uuid
 import chainlit as cl
 from config import gemini_config
-from agents import ItemHelpers, Runner
+from agents import ItemHelpers, Runner, enable_verbose_stdout_logging
 from context import DentalAgentContext
 from run_hooks import RunLifecycleHooks
 from orchestrator_agent import triage_agent
 from openai.types.responses import ResponseTextDeltaEvent
 
+# Debug Logs
+# enable_verbose_stdout_logging()
+
 config = gemini_config.config
+hooks = RunLifecycleHooks()
 
 @cl.on_chat_start
 async def start_chat():
@@ -44,7 +48,6 @@ async def handle_message(message: cl.Message):
     await msg.send()
 
     try:
-        hooks = RunLifecycleHooks()
         # Add new user message to history
         input_history.append({"role": "user", "content": message.content})
 

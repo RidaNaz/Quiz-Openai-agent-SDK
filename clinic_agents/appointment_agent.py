@@ -57,10 +57,10 @@ appointment_agent = Agent[DentalAgentContext](
    - After actions: "I've [action] your appointment. You'll receive a confirmation email shortly."
    """,
    tools=[
-       get_appointments_tool,
-       create_appointment_tool,
-       update_appointment_tool,
-       cancel_appointment_tool
+      get_appointments_tool,
+      create_appointment_tool,
+      update_appointment_tool,
+      cancel_appointment_tool
    ],
    model=model,
    handoff_description="To deal with Appointment booking or related queries/tasks",

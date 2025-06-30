@@ -78,20 +78,23 @@ triage_agent = Agent(
    handoffs=[
       handoff(
          verification_agent,
+         tool_name_override="Verification_Agent",
          on_handoff=lambda ctx: on_handoff(verification_agent, ctx),
          input_filter=handoff_filters.remove_all_tools
          ),
       handoff(
          appointment_agent,
+          tool_name_override="Appointment_Agent",
          on_handoff=lambda ctx: on_handoff(appointment_agent, ctx),
          input_filter=handoff_filters.remove_all_tools
          ),
       handoff(
          symptom_agent,
+          tool_name_override="Symptoms_Agent",
          on_handoff=lambda ctx: on_handoff(symptom_agent, ctx),
          input_filter=handoff_filters.remove_all_tools
          )
       ],
    model=model,
-   model_settings=ModelSettings(tool_choice="required", temperature=2)
+   model_settings=ModelSettings(tool_choice="auto", temperature=0.2)
 )
