@@ -1,6 +1,7 @@
-from agents import Agent, ModelSettings
 from config import gemini_config
+from agent_hooks import CustomAgentHooks
 from context import DentalAgentContext
+from agents import Agent, ModelSettings
 from tools.logs_entry import log_symptoms_tool
 
 model = gemini_config.model
@@ -49,4 +50,5 @@ symptom_agent = Agent[DentalAgentContext](
    model=model,
    handoff_description="To provide guidance to any medical condition or symtoms",
    model_settings=ModelSettings(tool_choice="required"),
+   hooks=CustomAgentHooks(display_name="symptom_agent"),
 )

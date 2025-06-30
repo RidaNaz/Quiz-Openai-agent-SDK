@@ -6,6 +6,7 @@ from config import gemini_config
 from agents import ItemHelpers, Runner
 from context import DentalAgentContext
 from orchestrator_agent import triage_agent
+from openai.types.responses import ResponseTextDeltaEvent
 
 config = gemini_config.config
 
@@ -63,7 +64,9 @@ async def handle_message(message: cl.Message):
                 await c_agent.update()
                 
             # Stream the response token by token
-            if event.type == "raw_response_event" and hasattr(event.data, 'delta'):
+            # if event.type == "raw_response_event" and hasattr(event.data, 'delta'):
+            #     token = event.data.delta
+            if event.type == "raw_response_event" and isinstance(event.data, ResponseTextDeltaEvent):
                 token = event.data.delta
                 await msg.stream_token(token)
             

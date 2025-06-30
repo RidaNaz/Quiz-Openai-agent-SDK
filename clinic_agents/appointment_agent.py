@@ -1,5 +1,5 @@
-from agents import Agent, ModelSettings
 from config import gemini_config
+from agent_hooks import CustomAgentHooks
 from tools.appointments import (
     get_appointments_tool,
     create_appointment_tool,
@@ -7,6 +7,7 @@ from tools.appointments import (
     cancel_appointment_tool
 )
 from context import DentalAgentContext
+from agents import Agent, ModelSettings
 from tools.send_email import send_email_tool
 
 model = gemini_config.model
@@ -67,4 +68,5 @@ appointment_agent = Agent[DentalAgentContext](
    model=model,
    handoff_description="To deal with Appointment booking or related queries/tasks",
    model_settings=ModelSettings(tool_choice="required"),
+   hooks=CustomAgentHooks(display_name="appointment_agent"),
 )

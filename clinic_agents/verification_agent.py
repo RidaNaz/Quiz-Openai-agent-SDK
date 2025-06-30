@@ -1,12 +1,12 @@
-from agents import Agent, ModelSettings
 from config import gemini_config
+from agent_hooks import CustomAgentHooks
 from context import DentalAgentContext
+from agents import Agent, ModelSettings
 from tools.verify_patient import verify_patient_tool
 
 model = gemini_config.model
 
 verification_agent = Agent[DentalAgentContext](
-   
    name="Verification Agent",
    instructions="""
    # Role and Objective
@@ -50,5 +50,6 @@ verification_agent = Agent[DentalAgentContext](
    tools=[verify_patient_tool],
    model=model,
    model_settings=ModelSettings(tool_choice="required", temperature=0),
-   handoff_description="To verify the patient with Name & DOB"
+   handoff_description="To verify the patient with Name & DOB",
+   hooks=CustomAgentHooks(display_name="verification_agent"),
 )
