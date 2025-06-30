@@ -93,5 +93,5 @@ triage_agent = Agent(
          )
       ],
    model=model,
-   model_settings=ModelSettings(tool_choice="auto", temperature=0)
+   model_settings=ModelSettings(tool_choice="required", temperature=2)
 )

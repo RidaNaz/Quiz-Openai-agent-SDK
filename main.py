@@ -1,10 +1,9 @@
-import os
 import uuid
 import chainlit as cl
-from datetime import datetime
 from config import gemini_config
 from agents import ItemHelpers, Runner
 from context import DentalAgentContext
+from run_hooks import RunLifecycleHooks
 from orchestrator_agent import triage_agent
 from openai.types.responses import ResponseTextDeltaEvent
 
@@ -45,6 +44,7 @@ async def handle_message(message: cl.Message):
     await msg.send()
 
     try:
+        hooks = RunLifecycleHooks()
         # Add new user message to history
         input_history.append({"role": "user", "content": message.content})
 
@@ -53,7 +53,8 @@ async def handle_message(message: cl.Message):
             starting_agent=current_agent,
             input=input_history,
             context=context,
-            run_config=config
+            run_config=config,
+            hooks = hooks
         )
         
         # Process streaming events
